@@ -5,11 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "node_1": "nodemon --watch dev -e js blockchain/networkNode.js 3001 http://localhost:3001",
-    "node_2": "nodemon --watch dev -e js blockchain/networkNode.js 3002 http://localhost:3002",
-    "node_3": "nodemon --watch dev -e js blockchain/networkNode.js 3003 http://localhost:3003",
-    "node_4": "nodemon --watch dev -e js blockchain/networkNode.js 3004 http://localhost:3004",
-    "node_5": "nodemon --watch dev -e js blockchain/networkNode.js 3005 http://localhost:3005"
+    "node_1": "nodemon blockchain/networkNode.js",
+    "dev": "npm run start-redis && nodemon blockchain/networkNode.js",
+    "start-redis" : "redis-server --daemonize yes"
   },
   "author": "Nufail M.F.M",
   "license": "ISC",
@@ -18,6 +16,7 @@
     "body-parser": "^1.19.2",
     "express": "^4.17.3",
     "nodemon": "^2.0.15",
+    "redis": "^2.8.0",
     "request": "^2.88.2",
     "sha256": "^0.2.0",
     "uuid": "^8.3.2"

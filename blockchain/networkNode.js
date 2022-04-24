@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const { v4 } = require("uuid");
 const Blockchain = require("./blockchain");
 const { default: axios } = require("axios");
-const port = process.argv[2];
+const port = process.env.PORT;
 
 const app = express();
 app.use(bodyParser.json());
@@ -213,6 +213,6 @@ app.get("/consensus", function (req, res) {
 });
 
 
-app.listen(port, function () {
-  console.log(`Listening on port ${port}...`);
+app.listen(3000, function () {
+  console.log(`Listening on port 3000...`);
 });
