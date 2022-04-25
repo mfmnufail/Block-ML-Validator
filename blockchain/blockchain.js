@@ -155,21 +155,21 @@ class Blockchain {
   };
 
 
-  replaceChain(mlcoin,blockchain){
+  replaceChain(mlcoin){
     
    
-      const currentChainLength = mlcoin.chain.length;
+      const currentChainLength = mlcoin.chain ? mlcoin.chain.length : 0;
       let maxChainLength = currentChainLength;
       let newLongestChain = null;
       let newPendingTransactions = null;
   
     
     
-        if (blockchain.chain.length > maxChainLength) {
-          maxChainLength = blockchain.chain.length;
-          newLongestChain = blockchain;
-          newPendingTransactions = blockchain.chain.pendingTransactions;
-        }
+        // if (blockchain.chain.length > maxChainLength) {
+        //   maxChainLength = blockchain.chain.length;
+        //   newLongestChain = blockchain;
+        //   newPendingTransactions = blockchain.chain.pendingTransactions;
+        // }
       
   
       if (!newLongestChain ||(newLongestChain && !mlcoin.chainIsValid(newLongestChain))) {

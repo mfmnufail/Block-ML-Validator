@@ -11,6 +11,19 @@ app.use(bodyParser.urlencoded({ extended: false }));
 const nodeAddress = v4().split("_").join("");
 const mlcoin = new Blockchain();
 
+
+const PubSub = require('../app/pubsub')
+const DEFAULT_PORT = 3000;
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
+const REDIS_URL = 'redis://127.0.0.1:6379' ;
+
+const pendingTransactions = mlcoin.pendingTransactions;
+
+const pubsub = new PubSub({ mlcoin, pendingTransactions , redisUrl: REDIS_URL });
+
+setTimeout(()=> pubsub.broadcastChain(), 1000)
+
+
 app.get("/", (req, res) => {
   res.send(mlcoin.currentNodeUrl);
 });
@@ -133,6 +146,9 @@ app.get("/mine", function (req, res) {
 
   Promise.all(requestPromise)
   .then((data) => {
+
+    pubsub.broadcastChain();
+
     res.json({
       note: "New block mined & broadcast successfully",
       block: newBlock,
@@ -213,6 +229,18 @@ app.get("/consensus", function (req, res) {
 });
 
 
-app.listen(3000, function () {
-  console.log(`Listening on port 3000...`);
+let PEER_PORT;
+
+if (process.env.GENERATE_PEER_PORT === 'true') {
+  PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
+}
+
+const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT;
+app.listen(PORT, () => {
+  console.log(`listening at localhost:${PORT}`);
+
+  if (PORT !== DEFAULT_PORT) {
+    // syncWithRootState();
+    console.log("The differennt port from default")
+  }
 });
