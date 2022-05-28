@@ -29,7 +29,7 @@ class PubSub {
 
     switch(channel) {
       case CHANNELS.BLOCKCHAIN:
-        this.blockchain.replaceChain(parsedMessage)
+        this.blockchain.replaceChain(parsedMessage, this.blockchain)
           
         //   , true, () => {
         //   this.transactionPool.clearBlockchainTransactions({
@@ -62,7 +62,7 @@ class PubSub {
   broadcastChain() {
     this.publish({
       channel: CHANNELS.BLOCKCHAIN,
-      message: JSON.stringify(this.blockchain.chain)
+      message: JSON.stringify(this.blockchain)
     });
   }
 

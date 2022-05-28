@@ -3,6 +3,7 @@ const { v4 } =  require ('uuid');
 const currentNodeUrl = process.argv[3];
 const Block = require("./block");
 const {GENESIS_DATA} = require("../config");
+const BlockchainUtils = require("../Utils/BlockchainUtils")
 
 class Blockchain {
 
@@ -60,12 +61,14 @@ class Blockchain {
     for(let i=1 ; i< blockchain.length ; ++i){
         const currentBlock = blockchain[i];
         const prevBlock = blockchain[i-1];
-        const blockHash = this.hashBlock(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+        const blockHash = BlockchainUtils.hashBlock(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
         if (blockHash.substring(0, 4) !== '0000') validChain = false;
         if (currentBlock['previousBlockHash'] !== prevBlock['hash']) validChain = false;
     }
 
     const genesisBlock = blockchain[0];
+
+    console.log("Genesis block >>", blockchain)
     const correctTransactions = genesisBlock['transactions'].length === 0;
     if (!correctTransactions) validChain = false;
 
@@ -76,10 +79,10 @@ class Blockchain {
    
   proofOfWork(previousBlockHash,currentBlockData){
     let nonce = 0;
-    let hash = this.hashBlock(previousBlockHash,currentBlockData,nonce)
+    let hash = BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
     while(hash.substring(0,4) !== '0000'){
       nonce++;
-      hash = this.hashBlock(previousBlockHash,currentBlockData,nonce)
+      hash = BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
     }
 
     return nonce;
@@ -87,11 +90,14 @@ class Blockchain {
 
 
 
-  hashBlock(previousBlockHash,currentBlockData,nonce){
-    const dataString = previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
-    const hash = sha256(dataString);
-    return hash;
-  }
+  // BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
+ 
+ 
+//  {
+//     const dataString = previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
+//     const hash = sha256(dataString);
+//     return hash;
+//   }
 
   getBlock(blockHash){
     let correctBlock = null;
@@ -155,7 +161,10 @@ class Blockchain {
   };
 
 
-  replaceChain(mlcoin){
+  replaceChain(blockchain,mlcoin){
+
+    console.log("This is the mlcoin from replaceChain >>>", mlcoin.chain.length)
+    console.log("This is the blockchain from replaceChain >>>", blockchain.chain.length)
     
    
       const currentChainLength = mlcoin.chain ? mlcoin.chain.length : 0;
@@ -165,14 +174,14 @@ class Blockchain {
   
     
     
-        // if (blockchain.chain.length > maxChainLength) {
-        //   maxChainLength = blockchain.chain.length;
-        //   newLongestChain = blockchain;
-        //   newPendingTransactions = blockchain.chain.pendingTransactions;
-        // }
+        if (blockchain.chain.length > maxChainLength) {
+          maxChainLength = blockchain.chain.length;
+          newLongestChain = blockchain;
+          newPendingTransactions = blockchain.chain.pendingTransactions;
+        }
       
   
-      if (!newLongestChain ||(newLongestChain && !mlcoin.chainIsValid(newLongestChain))) {
+      if (!newLongestChain ||(newLongestChain && !this.chainIsValid(newLongestChain.chain))) {
 
         console.log("Current chain has not been replaced.")
 
@@ -181,7 +190,7 @@ class Blockchain {
           chain: mlcoin.chain,
         };
       } else {
-        mlcoin.chain = newLongestChain;
+        mlcoin.chain = newLongestChain.chain;
         mlcoin.pendingTransactions = newPendingTransactions;
 
         console.log("This chain has been replaced.")

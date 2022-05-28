@@ -8,7 +8,7 @@
     "node_1": "nodemon blockchain/networkNode.js",
     "dev": "npm run start-redis && nodemon blockchain/networkNode.js",
     "start-redis": "redis-server --daemonize yes",
-    "dev-peer" : "cross-env GENERATE_PEER_PORT='true' nodemon blockchain/networkNode.js"
+    "dev-peer": "cross-env GENERATE_PEER_PORT='true' nodemon blockchain/networkNode.js"
   },
   "author": "Nufail M.F.M",
   "license": "ISC",
@@ -21,6 +21,7 @@
     "redis": "^2.8.0",
     "request": "^2.88.2",
     "sha256": "^0.2.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "ws": "^8.6.0"
   }
 }

@@ -4,6 +4,8 @@ const { v4 } = require("uuid");
 const Blockchain = require("./blockchain");
 const { default: axios } = require("axios");
 const port = process.env.PORT;
+const BlockchainUtils = require("../Utils/BlockchainUtils")
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -130,7 +132,7 @@ app.get("/mine", function (req, res) {
     index: lastBlock["index"] + 1,
   };
   const nonce = mlcoin.proofOfWork(previousBlockHash, currentBlockData);
-  const hash = mlcoin.hashBlock(
+  const hash = BlockchainUtils.hashBlock(
     previousBlockHash,
     currentBlockData,
     nonce
@@ -238,6 +240,8 @@ if (process.env.GENERATE_PEER_PORT === 'true') {
 const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT;
 app.listen(PORT, () => {
   console.log(`listening at localhost:${PORT}`);
+
+  console.log(process.argv[0])
 
   if (PORT !== DEFAULT_PORT) {
     // syncWithRootState();
