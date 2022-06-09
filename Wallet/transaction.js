@@ -1,5 +1,5 @@
 const uuid = require('uuid/v1');
-const { verifySignature } = require('../util');
+const { verifySignature } = require('../utils');
 const { REWARD_INPUT, MINING_REWARD } = require('../config');
 
 class Transaction {
@@ -17,7 +17,7 @@ class Transaction {
 
     return outputMap;
   }
-
+ 
   createInput({ senderWallet, outputMap }) {
     return {
       timestamp: Date.now(),

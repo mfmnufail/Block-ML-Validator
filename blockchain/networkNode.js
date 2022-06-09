@@ -14,9 +14,9 @@ const nodeAddress = v4().split("_").join("");
 const mlcoin = new Blockchain();
 
 
-const PubSub = require('../app/pubsub')
-const DEFAULT_PORT = 3000;
+const DEFAULT_PORT = 3005;
 const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
+const PubSub = require('../app/pubsub')
 const REDIS_URL = 'redis://127.0.0.1:6379' ;
 
 const pendingTransactions = mlcoin.pendingTransactions;
@@ -248,3 +248,6 @@ app.listen(PORT, () => {
     console.log("The differennt port from default")
   }
 });
+
+
+
