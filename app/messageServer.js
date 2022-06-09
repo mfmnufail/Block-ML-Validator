@@ -9,8 +9,15 @@ var swarm = topology(address,peers);
 var streams = streamSet()
 
 const Blockchain = require("../blockchain/blockchain");
-const mlcoin = new Blockchain();
-const {rpc} = require('../blockchain/networkNode')
+// const mlcoin = new Blockchain();
+const {rpc, mlcoin} = require('../blockchain/networkNode')
+const PubSub = require("./pubsub")
+
+
+const REDIS_URL = 'redis://127.0.0.1:6379' ;
+const pubsub = new PubSub({ mlcoin , redisUrl: REDIS_URL });
+setTimeout(()=> pubsub.broadcastChain(), 1000)
+// setTimeout(()=> pubsub.broadcastTransaction(), 1000)
 
 
 const PORT = process.env.PORT || 3000
@@ -22,28 +29,29 @@ let connected = []
 let check = []
 let checking = []
 let chain = []
+const DEFAULT_PORT = 3005;
+let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
 
-rpc();
+rpc(PEER_PORT, pubsub);
 
 swarm.on('connection', (peer)=>{
     console.log("[a friend joined!]")
     peer = jsonStream(peer)
     streams.add(peer)
-
-    peer.on('message', (message)=>{
-      console.log(message.ip + "> " + message.type + " " + message.data)
-        switch(message.type){
-            case "BLOCKCHAIN":
-                console.log(message.data.chain)
-                chain.push(message.data.chain)
-        }
-
+  
+  
+    peer.on('data', (data)=>{
+      console.log(data.username + "> " + data.message)
+    //   streams.forEach(otherPeer=>{
+    //     otherPeer.write(data)
+    //   })
+  
     })
   })
   
-  process.stdin.on('message', (message)=>{
+  process.stdin.on('data', (data)=>{
     streams.forEach((peer) => {
-      peer.write({ip: address, type: message.toString().trim(), data: {chain:mlcoin}})
+      peer.write({ username: address, message: data.toString().trim()})
     });
   })
 

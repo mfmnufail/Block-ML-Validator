@@ -7,9 +7,9 @@ const CHANNELS = {
 };
 
 class PubSub {
-  constructor({ mlcoin, pendingTransactions, redisUrl }) {
+  constructor({ mlcoin, redisUrl }) {
     this.blockchain = mlcoin;
-    this.transactionPool = pendingTransactions;
+    // this.transactionPool = pendingTransactions;
 
     this.publisher = redis.createClient(redisUrl);
     this.subscriber = redis.createClient(redisUrl);
@@ -36,10 +36,10 @@ class PubSub {
         //     chain: parsedMessage
         //   });
         // });
-      //   break;
-      // case CHANNELS.TRANSACTION:
-      //   this.transactionPool.setTransaction(parsedMessage);
-      //   break;
+        break;
+      case CHANNELS.TRANSACTION:
+        this.blockchain.addTransactionToPendingTransactions(parsedMessage);
+        break;
       default:
         return;
     }

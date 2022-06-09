@@ -50,7 +50,7 @@ class Blockchain {
   }
 
   addTransactionToPendingTransactions(transactionObj) {
-    this.pendingTransactions.push(transactionObj);
+    this.pendingTransactions ? this.pendingTransactions.push(transactionObj) : null;
     return this.getLastBlock()["index"] + 1;
   }
 
@@ -177,7 +177,7 @@ class Blockchain {
         if (blockchain.chain.length > maxChainLength) {
           maxChainLength = blockchain.chain.length;
           newLongestChain = blockchain;
-          newPendingTransactions = blockchain.chain.pendingTransactions;
+          // newPendingTransactions = blockchain.chain.pendingTransactions;
         }
       
   
@@ -191,7 +191,7 @@ class Blockchain {
         };
       } else {
         mlcoin.chain = newLongestChain.chain;
-        mlcoin.pendingTransactions = newPendingTransactions;
+        mlcoin.pendingTransactions = [];
 
         console.log("This chain has been replaced.")
         return{
