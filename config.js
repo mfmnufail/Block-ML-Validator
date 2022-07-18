@@ -5,10 +5,14 @@ const GENESIS_DATA = {
   nonce: 0,
   hash: '',
   previouseBlockHash:'',
+  nextValidator: "bob"
   
 };
 
 const STARTING_BALANCE = 1000;
+const STARTING_REPUTATION = 50;
+const ALPHA = 50;
+const COMPETITION_DEADLINE = 3600000;
 
 const REWARD_INPUT = { address: '*authorized-reward*' };
 
@@ -19,5 +23,8 @@ module.exports = {
   MINE_RATE,
   STARTING_BALANCE,
   REWARD_INPUT,
-  MINING_REWARD
+  MINING_REWARD,
+  STARTING_REPUTATION,
+  ALPHA,
+  COMPETITION_DEADLINE
 };

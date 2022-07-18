@@ -4,6 +4,11 @@ const currentNodeUrl = process.argv[3];
 const Block = require("./block");
 const {GENESIS_DATA} = require("../config");
 const BlockchainUtils = require("../Utils/BlockchainUtils")
+const ReputationStake = require('../Chosen/reputationStake')
+const {cryptoHash} = require('../Utils')
+const reputationStake = new ReputationStake();
+// const Model = require('../Wallet/model')
+
 
 class Blockchain {
 
@@ -11,25 +16,40 @@ class Blockchain {
     
     this.chain = [];
     this.pendingTransactions = [];
+    this.pendingTrainDataTransactions = [];
+    this.pendingTestDataTransactions = [];
+    this.pendingModelTransactions = [];
     this.currentNodeUrl = currentNodeUrl;
     this.networkNodes = [];
+    this.reputation = {}
+    this.validators = {}
 
-    this.createNewBlock(GENESIS_DATA.nonce,GENESIS_DATA.hash,GENESIS_DATA.previousBlockHash);
+    this.createNewBlock(GENESIS_DATA.nonce,GENESIS_DATA.hash,GENESIS_DATA.previousBlockHash,GENESIS_DATA.nextValidator);
   }
 
-  createNewBlock(nonce, hash, previousBlockHash) {
+  createNewBlock(validator, hash, previousBlockHash) {
     const newBlockContains = {
       index: this.chain.length + 1,
       timestamp: Date.now(),
       transactions: this.pendingTransactions,
-      nonce: nonce,
+      trainDataTransaction: this.pendingTrainDataTransactions,
+      testDataTransaction: this.pendingTestDataTransactions,
+      modelTransaction: this.pendingModelTransactions,
       hash: hash,
       previousBlockHash: previousBlockHash,
+      nextValidator : validator,
+      reputation : this.reputation
     };
 
-    this.pendingTransactions = [];
+
     const newBlock = new Block(newBlockContains);
     this.chain.push(newBlock);
+    this.pendingTransactions = [];
+    this.pendingTrainDataTransactions = [];
+    this.pendingTestDataTransactions=[];
+    this.pendingModelTransactions =[];
+    this.networkNodes = [];
+    this.reputation = {}
 
     return newBlock;
   }
@@ -37,6 +57,71 @@ class Blockchain {
   getLastBlock() {
     return this.chain[this.chain.length - 1];
   }
+
+  createDataTransaction(sender, contentAddress, description,deadline, flag){
+    const newDataTransaction = {
+      sender: sender,
+      contentAddress: contentAddress,
+      description: description,
+      deadline: deadline,
+      flag: flag,
+      transactionId: v4().split("-").join("")
+    };
+
+    return newDataTransaction;
+  }
+
+  addTrainDataTransactionToPendingDataTransactions(dataTransactionObj) {
+
+    if( this.addUniqeTrainDataset(dataTransactionObj) === -1) {
+      this.pendingTrainDataTransactions?  this.pendingTrainDataTransactions.push(dataTransactionObj) : null ; 
+      return this.getLastBlock()["index"] + 1;
+    }
+
+  }
+
+  addTestDataTransactionToPendingDataTransactions(dataTransactionObj) {
+
+    if( this.addUniqeTestDataset(dataTransactionObj) === -1) {
+      if(this.chain.length === 1){
+        reputationStake.update("bob",dataTransactionObj.reputation)
+      }else{
+        reputationStake.update(dataTransactionObj.senderwallet,dataTransactionObj.reputation)
+      }
+      this.pendingTestDataTransactions?  this.pendingTestDataTransactions.push(dataTransactionObj) : null ; 
+      this.validators = reputationStake.stakers
+      return this.getLastBlock()["index"] + 1;
+    }
+
+  }
+
+  addModelTransactionToPendingModelTransactions(modelTransactionObj) {
+    if( this.addUniqeModel(modelTransactionObj) === -1) {
+    this.pendingModelTransactions ? this.pendingModelTransactions.push(modelTransactionObj.sender = modelTransactionObj) : null;
+    return this.getLastBlock()["index"] + 1;
+    }
+  }
+
+  addReputationRating({publickey, reputation}){
+    this.reputation[publickey] = reputation
+  }
+
+
+
+  // createModelTransaction(senderWallet, datasetAddress, modelAddress, flag){
+  //     const model = new Model({senderWallet,datasetAddress,modelAddress,flag})
+  //     const newModelTransaction = {
+  //       sender : senderWallet,
+  //       datasetAddress: datasetAddress,
+  //       modelAddress: modelAddress,
+  //       deadline : model.getDataDescription.deadline,
+  //       isAcceptable : model.getDataDescription.isAcceptable
+  //     }
+
+  //     return newModelTransaction;
+  // }
+
+ 
 
   createNewTransaction(amount, sender, recipient) {
     const newTransaction = {
@@ -50,8 +135,60 @@ class Blockchain {
   }
 
   addTransactionToPendingTransactions(transactionObj) {
+    
+    if( this.addUniqeTransaction(transactionObj) === -1) {
     this.pendingTransactions ? this.pendingTransactions.push(transactionObj) : null;
     return this.getLastBlock()["index"] + 1;
+  }
+
+}
+
+   addUniqeTransaction(data) {
+    let index = -1;
+    for(let i = 0; i < this.pendingTransactions.length; i++) {
+      if(this.pendingTransactions[i].transactionId === data.transactionId) {
+        return index = i;
+      }
+    }
+
+    return index;
+  
+  }
+
+  addUniqeTrainDataset(data) {
+    let index = -1;
+    for(let i = 0; i < this.pendingTrainDataTransactions.length; i++) {
+      if(this.pendingTrainDataTransactions[i].datasetAddress === data.datasetAddress) {
+        return index = i;
+      }
+    }
+
+    return index;
+  
+  }
+
+  addUniqeTestDataset(data) {
+    let index = -1;
+    for(let i = 0; i < this.pendingTestDataTransactions.length; i++) {
+      if(this.pendingTestDataTransactions[i].trainDatasetAddress === data.trainDatasetAddress) {
+        return index = i;
+      }
+    }
+
+    return index;
+  
+  }
+
+  addUniqeModel(data) {
+    let index = -1;
+    for(let i = 0; i < this.pendingModelTransactions.length; i++) {
+      if(this.pendingModelTransactions[i].modelAddress === data.modelAddress) {
+        return index = i;
+      }
+    }
+
+    return index;
+  
   }
 
  
@@ -76,6 +213,23 @@ class Blockchain {
 
   }
 
+   nextValidator(){
+       let lastBlockHash =  cryptoHash(this.getLastBlock().hash)
+       console.log("The last block hash " + lastBlockHash)
+        let nextValidator = reputationStake.validator(lastBlockHash)
+        return nextValidator
+    }
+
+   validValidator(block){
+    validatorPublicKey = reputationStake.validator(block.hash)
+    proposedBlockValidator = block.validator
+    if (validatorPublicKey == proposedBlockValidator){
+        return true;
+    }else{
+        return false;
+    }
+   }
+        
    
   proofOfWork(previousBlockHash,currentBlockData){
     let nonce = 0;
@@ -164,7 +318,7 @@ class Blockchain {
   replaceChain(blockchain,mlcoin){
 
     console.log("This is the mlcoin from replaceChain >>>", mlcoin.chain.length)
-    console.log("This is the blockchain from replaceChain >>>", blockchain.chain.length)
+    // console.log("This is the blockchain from replaceChain >>>", blockchain.chain.length)
     
    
       const currentChainLength = mlcoin.chain ? mlcoin.chain.length : 0;
@@ -174,26 +328,38 @@ class Blockchain {
   
     
     
-        if (blockchain.chain.length > maxChainLength) {
+        if (blockchain.chain.length > mlcoin.chain.length ) {
           maxChainLength = blockchain.chain.length;
           newLongestChain = blockchain;
           // newPendingTransactions = blockchain.chain.pendingTransactions;
         }
+
+        
+
+        console.log("Old chain length >>>" + mlcoin.chain.length)
+        console.log("New chain length >>>" + blockchain.chain.length)
       
   
-      if (!newLongestChain ||(newLongestChain && !this.chainIsValid(newLongestChain.chain))) {
+      if (!blockchain ||(blockchain && this.chainIsValid(blockchain.chain))) {
+        console.log("newLongestChain" + blockchain)
+        console.log("chainIsValid" + this.chainIsValid(blockchain.chain))
 
         console.log("Current chain has not been replaced.")
 
         return {
+    
           note: "Current chain has not been replaced.",
           chain: mlcoin.chain,
         };
       } else {
-        mlcoin.chain = newLongestChain.chain;
-        mlcoin.pendingTransactions = [];
+        console.log("<<<< chain has been replaced>>>>")
+        mlcoin.chain = blockchain.chain;
+        mlcoin.pendingTransactions = blockchain.pendingTransactions;
+        mlcoin.pendingTrainDataTransactions = blockchain.pendingTrainDataTransactions;
+        mlcoin.pendingTestDataTransactions = blockchain.pendingTestDataTransactions;
+        mlcoin.pendingModelTransactions = blockchain.pendingModelTransactions;
 
-        console.log("This chain has been replaced.")
+        // console.log("This chain has been replaced.")
         return{
           note: "This chain has been replaced.",
           chain: mlcoin.chain,

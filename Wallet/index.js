@@ -1,13 +1,16 @@
-const Transaction = require("./transaction");
-const { STARTING_BALANCE } = require("../config");
+const TrainDatasetTransaction = require("./train-dataset");
+const TestDatasetTransaction = require("./test-dataset");
+const ModelTransaction = require("./model");
+const FavouritModel = require('./favouritModel')
+const { STARTING_BALANCE, STARTING_REPUTATION } = require("../config");
+const { ALPHA } = require("../config");
 const { ec, cryptoHash } = require("../utils");
 
 class Wallet {
   constructor() {
+    this.reputation = STARTING_REPUTATION;
     this.balance = STARTING_BALANCE;
-
     this.keyPair = ec.genKeyPair();
-
     this.publicKey = this.keyPair.getPublic().encode("hex");
   }
 
@@ -15,48 +18,70 @@ class Wallet {
     return this.keyPair.sign(cryptoHash(data));
   }
 
-  createTransaction({ recipient, amount, chain }) {
+  createTrainDatasetTransaction({ datasetAddress,description, flag, chain }) {
+   
+
+    return new TrainDatasetTransaction({ senderWallet: this, datasetAddress,description,flag });
+  }
+
+  getPublickey(){
+    return this.publicKey;
+  }
+
+  createTestDatasetTransaction({trainDatasetAddress, testDatasetAddress, description, flag, trainTransaction, chain}){
     if (chain) {
-      this.balance = Wallet.calculateBalance({
+      this.reputation = Wallet.calculateReputation({
         chain,
         address: this.publicKey,
       });
     }
-
-    if (amount > this.balance) {
-      throw new Error("Amount exceeds balance");
-    }
-
-    return new Transaction({ senderWallet: this, recipient, amount });
+    return new TestDatasetTransaction({senderWallet: this, trainDatasetAddress, testDatasetAddress, description, flag, trainTransaction})
   }
 
-  static calculateBalance({ chain, address }) {
+  createModelTransaction({datasetAddress, modelAddress, flag, trainTransaction}){
+    return new ModelTransaction({senderWallet: this, datasetAddress, modelAddress, flag, trainTransaction})
+  }
+
+  createFavouritModel({ datasetAddress,flag}){
+    return new FavouritModel({ senderWallet:this, datasetAddress,flag})
+  }
+
+  
+
+
+   static calculateReputation({ chain, publicKey }) {
     let hasConductedTransaction = false;
-    let outputsTotal = 0;
+    let count = 0;
+    let reputationTotal = 0;
 
     for (let i = chain.length - 1; i > 0; i--) {
       const block = chain[i];
 
-      for (let transaction of block.data) {
-        if (transaction.input.address === address) {
+      for (let transaction of block.trainDataTransaction) {
+        if (transaction.senderWallet === publicKey) {
           hasConductedTransaction = true;
-        }
-
-        const addressOutput = transaction.outputMap[address];
-
-        if (addressOutput) {
-          outputsTotal = outputsTotal + addressOutput;
+          count++;
         }
       }
 
-      if (hasConductedTransaction) {
-        break;
-      }
     }
 
+    for (let i = 0; chain.pendingTrainDataTransactions.length > i; i++) {
+     
+        if (chain.pendingTrainDataTransactions[i].senderWallet === publicKey) {
+          hasConductedTransaction = true;
+          count++;
+        }
+      
+
+    }
+
+    
+    this.reputation = this.reputation +  ALPHA * Math.log2(count+1);
+
     return hasConductedTransaction
-      ? outputsTotal
-      : STARTING_BALANCE + outputsTotal;
+      ? this.reputation
+      : STARTING_REPUTATION;
   }
 }
 
