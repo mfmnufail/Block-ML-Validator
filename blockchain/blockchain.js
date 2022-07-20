@@ -103,25 +103,9 @@ class Blockchain {
   }
 
   addReputationRating({publickey, reputation}){
-    this.reputation[publickey] = reputation
+    this.reputation[publickey] = {...reputation}
   }
 
-
-
-  // createModelTransaction(senderWallet, datasetAddress, modelAddress, flag){
-  //     const model = new Model({senderWallet,datasetAddress,modelAddress,flag})
-  //     const newModelTransaction = {
-  //       sender : senderWallet,
-  //       datasetAddress: datasetAddress,
-  //       modelAddress: modelAddress,
-  //       deadline : model.getDataDescription.deadline,
-  //       isAcceptable : model.getDataDescription.isAcceptable
-  //     }
-
-  //     return newModelTransaction;
-  // }
-
- 
 
   createNewTransaction(amount, sender, recipient) {
     const newTransaction = {
@@ -230,28 +214,7 @@ class Blockchain {
     }
    }
         
-   
-  proofOfWork(previousBlockHash,currentBlockData){
-    let nonce = 0;
-    let hash = BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
-    while(hash.substring(0,4) !== '0000'){
-      nonce++;
-      hash = BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
-    }
 
-    return nonce;
-  }
-
-
-
-  // BlockchainUtils.hashBlock(previousBlockHash,currentBlockData,nonce)
- 
- 
-//  {
-//     const dataString = previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
-//     const hash = sha256(dataString);
-//     return hash;
-//   }
 
   getBlock(blockHash){
     let correctBlock = null;

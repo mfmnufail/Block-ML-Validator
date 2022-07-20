@@ -1,4 +1,5 @@
-const FavouriteModel = require('./favouritModel');
+const FavouriteModel = require("./favouritModel");
+const { DIFFICULTY_LEVEL } = require("../config");
 
 class FavouriteModelPool {
   constructor() {
@@ -10,31 +11,33 @@ class FavouriteModelPool {
   }
 
   setFavouriteModelTransaction(transaction) {
-    this.favouriteModelMap[transaction.publickey] = {...transaction};
+    this.favouriteModelMap[transaction.publickey] = { ...transaction };
   }
 
   setMap(favouriteModelMap) {
     this.favouriteModelMap = favouriteModelMap;
   }
 
-  getMap(){
+  getMap() {
     return this.favouriteModelMap;
   }
 
   existingTransaction({ datasetAddress }) {
     const models = Object.values(this.favouriteModelMap);
 
-    return models.find(favmodel => favmodel.datasetAddress === datasetAddress);
+    return models.find(
+      (favmodel) => favmodel.datasetAddress === datasetAddress
+    );
   }
 
   validTransactions() {
-    return Object.values(this.favouriteModelMap).filter(
-      model => Model.validTransaction(model)
+    return Object.values(this.favouriteModelMap).filter((model) =>
+      Model.validTransaction(model)
     );
   }
 
   clearBlockchainTransactions({ chain }) {
-    for (let i=1; i<chain.length; i++) {
+    for (let i = 1; i < chain.length; i++) {
       const block = chain[i];
 
       for (let model of block.data) {
@@ -45,15 +48,40 @@ class FavouriteModelPool {
     }
   }
 
-   validatingRequired(){
+  // validatingRequired() {
+  //   console.log(
+  //     "The length of favourite pool " +
+  //       Object.keys(this.favouriteModelMap).length
+  //   );
+  //   if (Object.keys(this.favouriteModelMap).length >= 1) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
 
-    console.log("The length of favourite pool " + Object.keys(this.favouriteModelMap ).length)
-        if (Object.keys(this.favouriteModelMap ).length === 1){
-            return true
-        }else{
-            return false
-        }
-   }
+  /* This function iterate through the merkele root hash and find the 
+    same number of most appeared merkle root hash. Finally it returns "true" only
+    when it setisfiy the condition (difficulty level)
+  */
+
+  validatingRequired() {
+    let arr = Object.keys(this.favouriteModelMap);
+    let merkle = [];
+
+    arr.map((e) => {
+      merkle.push(e.merkleHash);
+    });
+
+    const counts = {};
+    merkle.forEach((x) => {
+      counts[x] = (counts[x] || 0) + 1;
+    });
+
+    let maxDupplicates = Math.max.apply(null, Object.values(counts));
+    return maxDupplicates >= DIFFICULTY_LEVEL;
+  }
+
 }
 
 module.exports = FavouriteModelPool;

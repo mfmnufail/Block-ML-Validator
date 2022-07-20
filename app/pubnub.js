@@ -1,6 +1,4 @@
 const redis = require('redis');
-
-
 var topology = require("fully-connected-topology")
 var jsonStream = require("duplex-json-stream")
 var streamSet = require("stream-set")
@@ -11,13 +9,8 @@ var swarm = topology(address,peers);
 var streams = streamSet()
 
 const {rpc,mlcoin, wallet, modelPool,favouriteModelPool} = require('../blockchain/networkNode')
-// const PubNub = require("./pubnub")
-// const REDIS_URL = 'redis://127.0.0.1:6379' ;
-// const pubsub = new PubNub({ mlcoin , redisUrl: REDIS_URL });
-// setTimeout(()=> pubsub.broadcastChain(), 1000)
 const DEFAULT_PORT = 3005;
 let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
-// rpc(PEER_PORT, pubsub);
 var received = {}
 
 
@@ -88,23 +81,11 @@ class PubNub {
 
   broadcastChain() {
 
-    // this.publish({
-    //   channel: CHANNELS.BLOCKCHAIN,
-    //   message: JSON.stringify(this.blockchain)
-    // });
 
     peerBroadcastMessage(JSON.stringify(this.blockchain))
-    // console.log(this.blockchain.pendingModelTransactions ? this.blockchain.pendingModelTransactions[0] : null)
-
-    
   }
 
   broadcastTransaction(transaction) {
-    // this.publish({
-    //   channel: CHANNELS.TRANSACTION,
-    //   message: JSON.stringify(transaction)
-    // });
-
     peerBroadcastMessage(JSON.stringify(transaction))
   }
 
@@ -114,8 +95,6 @@ class PubNub {
 const REDIS_URL = 'redis://127.0.0.1:6379' ;
 const pubsub = new PubNub({ mlcoin , redisUrl: REDIS_URL });
 const BlockchainUtils = require("../Utils/BlockchainUtils")
-// setTimeout(()=> pubsub.broadcastChain(), 1000)
-// setTimeout(()=> pubsub.broadcastTransaction(), 1000)
 rpc(PEER_PORT, pubsub);
 
 swarm.on('connection', function (socket, id) {
@@ -124,9 +103,7 @@ swarm.on('connection', function (socket, id) {
  
     socket = jsonStream(socket)
     socket.on('data', function (data) {
-
-    
-        
+  
         const parsedMessage = JSON.parse(data.message)
 
         parsedMessage.chain && mlcoin.replaceChain(parsedMessage, mlcoin)
@@ -137,15 +114,8 @@ swarm.on('connection', function (socket, id) {
         parsedMessage.datasetAddress && parsedMessage.modelAddress && !parsedMessage.performance && modelPool.setModelTransaction(parsedMessage);
         parsedMessage.reputation && mlcoin.addReputationRating(parsedMessage)
 
-        // parsedMessage.modelAddress && mlcoin.addModelTransactionToPendingModelTransactions(parsedMessage);
-
-
-        console.log("This is the parsed Message " , parsedMessage)
-        // console.log("This is the parsed Message " , parsedMessage.chain)
-
       if (data.seq <= received[data.from]) return // already received this one
       received[data.from] = data.seq
-    //   console.log(data.username + '> ' + data.message )
       streams.forEach(function (socket) {
         socket.write(data)
       })
@@ -157,15 +127,7 @@ swarm.on('connection', function (socket, id) {
   
   var seq = 0
   var id = Math.random()
-  
-//   process.stdin.on('data', function (data) {
-//     streams.forEach(function (socket) {
-//       var message = data.toString().trim()
-//       socket.write({from: id, seq: seq++, username: address, message: message})
-//     })
-//   })
-  
-  
+
     function peerBroadcastMessage(data){
     streams.forEach(function (socket) {
       if(data){
@@ -184,13 +146,6 @@ swarm.on('connection', function (socket, id) {
       console.log('i am the validator')
       newBlock = validatBlock({validator})
       peerBroadcastMessage(JSON.stringify(newBlock))
-      // block = sblockchain.createBlock(
-      //     self.transactionPool.transactions, self.wallet)
-      // self.transactionPool.removeFromPool(
-      //     self.transactionPool.transactions)
-      // message = Message(self.p2p.socketConnector, 'BLOCK', block)
-      // self.p2p.broadcast(BlockchainUtils.encode(message))
-
       }else{
         console.log('i am not a validator')
       }
@@ -200,13 +155,6 @@ swarm.on('connection', function (socket, id) {
         console.log('i am the validator')
         newBlock = validatBlock({validator})
         peerBroadcastMessage(JSON.stringify(newBlock))
-        // block = sblockchain.createBlock(
-        //     self.transactionPool.transactions, self.wallet)
-        // self.transactionPool.removeFromPool(
-        //     self.transactionPool.transactions)
-        // message = Message(self.p2p.socketConnector, 'BLOCK', block)
-        // self.p2p.broadcast(BlockchainUtils.encode(message))
-  
         }else{
           console.log('i am not a validator')
         }
@@ -226,7 +174,7 @@ swarm.on('connection', function (socket, id) {
       modelTransaction: mlcoin.pendingModelTransactions,
       index: lastBlock["index"] + 1,
     };
-    // const nonce = mlcoin.proofOfWork(previousBlockHash, currentBlockData);
+
     const hash = BlockchainUtils.hashBlock(
       previousBlockHash,
       currentBlockData,
@@ -238,26 +186,6 @@ swarm.on('connection', function (socket, id) {
  }
 
 
-  
-  //  function receiveMessage(){
-  //   swarm.on('connection', function (socket, id) {
-  //     console.log('info> direct connection to', id)
-    
-  //     socket = jsonStream(socket)
-  //     socket.on('data', function (data) {
-  //       if (data.seq <= received[data.from]) return // already received this one
-  //       received[data.from] = data.seq
-  //       console.log(data.username + '> ' + data.message )
-  //       streams.forEach(function (socket) {
-  //         socket.write(data)
-  //       })
-  //     })
-    
-  //     streams.add(socket)
-  //   })
-  // }
-  
-  
    function produceMessage(ip, type, data){
       return {ip, type, data};
   }

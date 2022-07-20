@@ -15,26 +15,6 @@ class Block {
         this.reputation = reputation
     }
 
-
-    // static genesis(){
-    //     return new this(GENESIS_DATA)
-    // }
-
-    // static createNewBlock(index,transaction,nonce,hash,previousBlockHash){
-    //     const newBlock={
-    //             index: index,
-    //             timstamp: Date.now(),
-    //             transaction: transaction,
-    //             nonce : nonce,
-    //             hash : hash,
-    //             previousBlockHash : previousBlockHash
-
-    //     };
-
-
-    // }
-
-    
     
 }
 module.exports = Block;
