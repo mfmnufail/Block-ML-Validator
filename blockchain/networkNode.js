@@ -123,6 +123,7 @@ function rpc(PORT, pubsub) {
     };
     mlcoin.addReputationRating(reputationRating);
 
+    console.log("The reputation rating " + JSON.stringify(reputationRating))
     pubsub.broadcastTransaction(reputationRating);
     res.json({
       note: `Training dataset will be added in the block ${blockIndex}.`,
@@ -172,6 +173,7 @@ function rpc(PORT, pubsub) {
 
     if (required) {
       pubsub.createNewBlock();
+      favouriteModelPool.clear()
     }
 
     res.json({ note: `Model will be added to the model pool.` });

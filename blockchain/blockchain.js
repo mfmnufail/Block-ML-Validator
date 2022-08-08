@@ -24,10 +24,10 @@ class Blockchain {
     this.reputation = {}
     this.validators = {}
 
-    this.createNewBlock(GENESIS_DATA.nonce,GENESIS_DATA.hash,GENESIS_DATA.previousBlockHash,GENESIS_DATA.nextValidator);
+    this.createNewBlock(GENESIS_DATA.hash,GENESIS_DATA.previouseBlockHash,GENESIS_DATA.nextValidator);
   }
 
-  createNewBlock(validator, hash, previousBlockHash) {
+  createNewBlock(hash, previousBlockHash,validator) {
     const newBlockContains = {
       index: this.chain.length + 1,
       timestamp: Date.now(),
@@ -50,12 +50,21 @@ class Blockchain {
     this.pendingModelTransactions =[];
     this.networkNodes = [];
     this.reputation = {}
+    this.nextValidator = {}
 
     return newBlock;
   }
 
   getLastBlock() {
     return this.chain[this.chain.length - 1];
+  }
+
+  getNextValidator(){
+    return this.getLastBlock()["nextValidator"]
+  }
+
+  clearGenesisStake(){
+    reputationStake.clear();
   }
 
   createDataTransaction(sender, contentAddress, description,deadline, flag){
@@ -103,7 +112,10 @@ class Blockchain {
   }
 
   addReputationRating({publickey, reputation}){
-    this.reputation[publickey] = {...reputation}
+    
+    if(publickey && reputation){
+      this.reputation[publickey] = reputation
+    }
   }
 
 
@@ -197,7 +209,8 @@ class Blockchain {
 
   }
 
-   nextValidator(){
+   nextBlockValidator(){
+    console.log("From next validator function!!!")
        let lastBlockHash =  cryptoHash(this.getLastBlock().hash)
        console.log("The last block hash " + lastBlockHash)
         let nextValidator = reputationStake.validator(lastBlockHash)
@@ -314,7 +327,7 @@ class Blockchain {
           note: "Current chain has not been replaced.",
           chain: mlcoin.chain,
         };
-      } else {
+      } else if(blockchain.chain> mlcoin.chain) {
         console.log("<<<< chain has been replaced>>>>")
         mlcoin.chain = blockchain.chain;
         mlcoin.pendingTransactions = blockchain.pendingTransactions;

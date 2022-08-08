@@ -11,6 +11,10 @@ class ReputationStake{
 
     }
 
+    clear(){
+        this.stakers={}
+    }
+
      setGenesisNodeStake(){
         let genesisPublicKey = "bob";
         console.log("The public key " + genesisPublicKey)

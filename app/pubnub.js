@@ -1,4 +1,4 @@
-const redis = require('redis');
+// const redis = require('redis');
 var topology = require("fully-connected-topology")
 var jsonStream = require("duplex-json-stream")
 var streamSet = require("stream-set")
@@ -10,7 +10,7 @@ var streams = streamSet()
 
 const {rpc,mlcoin, wallet, modelPool,favouriteModelPool} = require('../blockchain/networkNode')
 const DEFAULT_PORT = 3005;
-let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
+let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 10);
 var received = {}
 
 
@@ -25,15 +25,15 @@ class PubNub {
     this.blockchain = mlcoin;
     // this.transactionPool = pendingTransactions;
 
-    this.publisher = redis.createClient(redisUrl);
-    this.subscriber = redis.createClient(redisUrl);
+    // this.publisher = redis.createClient(redisUrl);
+    // this.subscriber = redis.createClient(redisUrl);
 
-    this.subscribeToChannels();
+    // this.subscribeToChannels();
 
-    this.subscriber.on(
-      'message',
-      (channel, message) => this.handleMessage(channel, message)
-    );
+    // this.subscriber.on(
+    //   'message',
+    //   (channel, message) => this.handleMessage(channel, message)
+    // );
   }
 
   handleMessage(channel, message) {
@@ -60,19 +60,19 @@ class PubNub {
     }
   }
 
-  subscribeToChannels() {
-    Object.values(CHANNELS).forEach(channel => {
-      this.subscriber.subscribe(channel);
-    });
-  }
+  // subscribeToChannels() {
+  //   Object.values(CHANNELS).forEach(channel => {
+  //     this.subscriber.subscribe(channel);
+  //   });
+  // }
 
-  publish({ channel, message }) {
-    this.subscriber.unsubscribe(channel, () => {
-      this.publisher.publish(channel, message, () => {
-        this.subscriber.subscribe(channel);
-      });
-    });
-  }
+  // publish({ channel, message }) {
+  //   this.subscriber.unsubscribe(channel, () => {
+  //     this.publisher.publish(channel, message, () => {
+  //       this.subscriber.subscribe(channel);
+  //     });
+  //   });
+  // }
 
   createNewBlock(){
     validateNewBlock()
@@ -112,7 +112,7 @@ swarm.on('connection', function (socket, id) {
         parsedMessage.datasetAddress && parsedMessage.description && mlcoin.addTrainDataTransactionToPendingDataTransactions(parsedMessage)
         parsedMessage.sender && mlcoin.addTransactionToPendingTransactions(parsedMessage);
         parsedMessage.datasetAddress && parsedMessage.modelAddress && !parsedMessage.performance && modelPool.setModelTransaction(parsedMessage);
-        parsedMessage.reputation && mlcoin.addReputationRating(parsedMessage)
+        parsedMessage.reputation && mlcoin.addReputationRating({publickey:parsedMessage.publickey, reputation:parsedMessage.reputation})
 
       if (data.seq <= received[data.from]) return // already received this one
       received[data.from] = data.seq
@@ -138,33 +138,39 @@ swarm.on('connection', function (socket, id) {
   }
 
  function validateNewBlock(){
- let validator = mlcoin.nextValidator()
- console.log("The validator " + validator)
- console.log("The chain length" + mlcoin.chain.length)
+//  let nextValidator = mlcoin.nextValidator()
+let validator = mlcoin.getNextValidator()
+ console.log("The previous validator " + validator)
+ console.log("The chain length " + mlcoin.chain.length)
   if(mlcoin.chain.length === 1){
     if (validator === "bob"){
       console.log('i am the validator')
-      newBlock = validatBlock({validator})
+      newBlock = validatBlock()
+      mlcoin.clearGenesisStake()
       peerBroadcastMessage(JSON.stringify(newBlock))
       }else{
         console.log('i am not a validator')
       }
   }else{
 
-    if (validator == wallet.getPublickey()){
+    if (validator === wallet.getPublickey()){
+      console.log("Wallet Owner" + wallet.getPublickey() + " but validator " + validator)
         console.log('i am the validator')
-        newBlock = validatBlock({validator})
+        newBlock = validatBlock()
         peerBroadcastMessage(JSON.stringify(newBlock))
         }else{
+          console.log("Wallet Owner" + wallet.getPublickey() + " but validator " + validator)
           console.log('i am not a validator')
         }
   }
  }
 
- function validatBlock({validator}){
+ function validatBlock(){
+  let nextValidator = mlcoin.nextBlockValidator()
+  console.log("The next validator " + nextValidator)
   const lastBlock = mlcoin.getLastBlock();
     const previousBlockHash = lastBlock["hash"];
-    const coinbase = mlcoin.createNewTransaction(6.25, "00", validator)
+    const coinbase = mlcoin.createNewTransaction(6.25, "00", nextValidator)
     mlcoin.addTransactionToPendingTransactions(coinbase)
     
     const currentBlockData = {
@@ -178,10 +184,10 @@ swarm.on('connection', function (socket, id) {
     const hash = BlockchainUtils.hashBlock(
       previousBlockHash,
       currentBlockData,
-      validator
+      nextValidator
     );
   
-    const newBlock = mlcoin.createNewBlock(mlcoin.nextValidator(), hash, previousBlockHash);
+    const newBlock = mlcoin.createNewBlock(hash, previousBlockHash,nextValidator);
     peerBroadcastMessage(JSON.stringify(mlcoin))
  }
 

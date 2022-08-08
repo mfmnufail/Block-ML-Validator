@@ -13,6 +13,7 @@
   "author": "Nufail M.F.M",
   "license": "ISC",
   "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.12",
     "axios": "^0.26.1",
     "body-parser": "^1.19.2",
     "cors": "^2.8.5",
@@ -21,14 +22,17 @@
     "duplex-json-stream": "^1.0.1",
     "elliptic": "^6.5.4",
     "express": "^4.17.3",
+    "fs": "0.0.1-security",
     "fully-connected-topology": "^1.1.1",
     "nodemon": "^2.0.15",
     "redis": "^2.8.0",
     "request": "^2.88.2",
     "sha256": "^0.2.0",
     "socket.io": "^4.5.1",
+    "solc": "^0.8.15",
     "stream-set": "^1.1.0",
     "uuid": "^8.3.2",
+    "web3": "^1.7.4",
     "ws": "^8.6.0"
   }
 }
