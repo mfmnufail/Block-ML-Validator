@@ -4,7 +4,7 @@ const ModelTransaction = require("./model");
 const FavouritModel = require('./favouritModel')
 const { STARTING_BALANCE, STARTING_REPUTATION } = require("../config");
 const { ALPHA } = require("../config");
-const { ec, cryptoHash } = require("../utils");
+const { ec, cryptoHash } = require("../Utils");
 
 class Wallet {
   constructor() {

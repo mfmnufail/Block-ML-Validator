@@ -1,5 +1,5 @@
 const uuid = require('uuid/v1');
-const { verifySignature } = require('../utils');
+const { verifySignature } = require('../Utils');
 const { REWARD_INPUT, MINING_REWARD } = require('../config');
 
 class Transaction {

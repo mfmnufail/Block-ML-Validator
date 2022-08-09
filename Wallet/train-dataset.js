@@ -1,5 +1,5 @@
 const { v4 } =  require ('uuid');
-const { verifySignature } = require('../utils');
+const { verifySignature } = require('../Utils');
 const { REWARD_INPUT, MINING_REWARD, COMPETITION_DEADLINE } = require('../config');
 const {mlcoin} = require("../blockchain/networkNode");
 

@@ -1,8 +1,8 @@
 const { v4 } =  require ('uuid');
-const { verifySignature } = require('../utils');
+const { verifySignature } = require('../Utils');
 const { REWARD_INPUT, MINING_REWARD } = require('../config');
 const {mlcoin} = require("../blockchain/networkNode");
-const { ec, cryptoHash } = require("../utils");
+const { ec, cryptoHash } = require("../Utils");
 
 
 class FavouritModel {
