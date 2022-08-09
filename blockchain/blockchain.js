@@ -19,10 +19,11 @@ class Blockchain {
     this.pendingTrainDataTransactions = [];
     this.pendingTestDataTransactions = [];
     this.pendingModelTransactions = [];
+    this.contractTransactions = []
     this.currentNodeUrl = currentNodeUrl;
     this.networkNodes = [];
     this.reputation = {}
-    this.validators = {}
+    this.blockValidator = {}
 
     this.createNewBlock(GENESIS_DATA.hash,GENESIS_DATA.previouseBlockHash,GENESIS_DATA.nextValidator);
   }
@@ -35,9 +36,10 @@ class Blockchain {
       trainDataTransaction: this.pendingTrainDataTransactions,
       testDataTransaction: this.pendingTestDataTransactions,
       modelTransaction: this.pendingModelTransactions,
+      contractTransactions: this.contractTransactions,
       hash: hash,
       previousBlockHash: previousBlockHash,
-      nextValidator : validator,
+      blockValidator : validator,
       reputation : this.reputation
     };
 
@@ -48,9 +50,10 @@ class Blockchain {
     this.pendingTrainDataTransactions = [];
     this.pendingTestDataTransactions=[];
     this.pendingModelTransactions =[];
+    this.contractTransactions = [];
     this.networkNodes = [];
     this.reputation = {}
-    this.nextValidator = {}
+    this.blockValidator = {}
 
     return newBlock;
   }
@@ -89,14 +92,24 @@ class Blockchain {
 
   }
 
+  addContractToPendingContractTransactions(transactionObj) {
+    
+    // if( this.addUniqeTransaction(transactionObj) === -1) {
+    this.contractTransactions ? this.contractTransactions.push(transactionObj) : null;
+    return this.getLastBlock()["index"] + 1;
+  // }
+
+  }
+
   addTestDataTransactionToPendingDataTransactions(dataTransactionObj) {
 
     if( this.addUniqeTestDataset(dataTransactionObj) === -1) {
-      if(this.chain.length === 1){
-        reputationStake.update("bob",dataTransactionObj.reputation)
-      }else{
-        reputationStake.update(dataTransactionObj.senderwallet,dataTransactionObj.reputation)
-      }
+      // if(this.chain.length === 1){
+      //   reputationStake.update("bob",dataTransactionObj.reputation)
+      // }else{
+      //   reputationStake.update(dataTransactionObj.senderwallet,dataTransactionObj.reputation)
+      // }
+      reputationStake.update(dataTransactionObj.senderwallet,dataTransactionObj.reputation)
       this.pendingTestDataTransactions?  this.pendingTestDataTransactions.push(dataTransactionObj) : null ; 
       this.validators = reputationStake.stakers
       return this.getLastBlock()["index"] + 1;
@@ -105,10 +118,10 @@ class Blockchain {
   }
 
   addModelTransactionToPendingModelTransactions(modelTransactionObj) {
-    if( this.addUniqeModel(modelTransactionObj) === -1) {
-    this.pendingModelTransactions ? this.pendingModelTransactions.push(modelTransactionObj.sender = modelTransactionObj) : null;
+    // if( this.addUniqeModel(modelTransactionObj) === -1) {
+    this.pendingModelTransactions ? this.pendingModelTransactions.push(modelTransactionObj) : null;
     return this.getLastBlock()["index"] + 1;
-    }
+    // }
   }
 
   addReputationRating({publickey, reputation}){
@@ -138,6 +151,7 @@ class Blockchain {
   }
 
 }
+
 
    addUniqeTransaction(data) {
     let index = -1;

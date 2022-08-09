@@ -48,6 +48,26 @@ class FavouriteModelPool {
     }
   }
 
+  validModelList() {
+    let arr = Object.values(this.favouriteModelMap);
+    let merkle = [];
+
+    arr.map((e) => {
+      merkle.push(e.merkleHash);
+    });
+
+    const counts = {};
+    merkle.forEach((x) => {
+      counts[x] = (counts[x] || 0) + 1;
+    });
+
+    let selectedMerkle = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+    let selectedModelsIndex = 0
+
+    arr.forEach((x,y) => {x.merkleHash === selectedMerkle; selectedModelsIndex = y} )
+    return arr[selectedModelsIndex].models ;
+  }
+
   // validatingRequired() {
   //   console.log(
   //     "The length of favourite pool " +

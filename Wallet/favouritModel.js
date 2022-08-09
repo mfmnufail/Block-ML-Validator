@@ -39,7 +39,7 @@ class FavouritModel {
 
     if(flag === "regresssion")
       this.models[modelAddress] = performance
-      this.models[modelAddress] = performance
+      // this.models[modelAddress] = performance
       let sortable = Object.fromEntries(
           Object.entries(this.models).sort(([,a],[,b]) => b-a)
       );

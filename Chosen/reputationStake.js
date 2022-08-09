@@ -6,8 +6,9 @@ const {wallet} = require('../blockchain/networkNode')
 class ReputationStake{
 
     constructor(){
-        this.stakers = {"bob":1}
-        this.setGenesisNodeStake()
+        // this.stakers = {"bob":1}
+        this.stakers = {}
+        // this.setGenesisNodeStake()
 
     }
 

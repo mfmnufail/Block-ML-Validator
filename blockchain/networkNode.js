@@ -17,7 +17,11 @@ const FavouriteModel = require("../Wallet/favouritModel");
 const favouriteModel = new FavouriteModel({ publickey: wallet.getPublickey() });
 const FavouriteModelPool = require("../Wallet/favourite-model-pool");
 const favouriteModelPool = new FavouriteModelPool();
+const ContractPool = require("../Wallet/contract-pool");
+const contractPool = new ContractPool();
 const cors = require("cors");
+const SmartContract = require("../SmartContract/tradeContract");
+const {deploy} = require("../SmartContract/tradeContract")
 const corsOptions = {
   origin: "*",
   credentials: true, //access-control-allow-credentials:true
@@ -66,12 +70,30 @@ function rpc(PORT, pubsub) {
     res.send(favouriteModelPool.getMap());
   });
 
+  app.get("/contract/pool", (req, res) => {
+    res.send(contractPool.getMap());
+  });
+
   app.post("/transaction", (req, res) => {
     const newTransaction = req.body;
     const blockIndex =
       mlcoin.addTransactionToPendingTransactions(newTransaction);
 
     res.json({ note: `Transaction will be added in the block ${blockIndex}.` });
+  });
+
+  app.post("/contract", async(req, res) => {
+
+    contractDetails = await deploy({MNEMONIC:req.body.MNEMONIC,account:req.body.account,
+    biddingTime:req.body.biddingTime,blockHash:req.body.blockHash,ipfsHash:req.body.ipfsHash
+    })
+
+
+    mlcoin.addContractToPendingContractTransactions(contractDetails)
+    contractPool.setModelTransaction(contractPool)
+    pubsub.broadcastTransaction(contractDetails);
+    res.send(contractDetails)
+    // res.json({ note: `Transaction will be added in the block ${blockIndex}.` });
   });
 
   app.post("/data/train", (req, res) => {
@@ -172,8 +194,11 @@ function rpc(PORT, pubsub) {
     console.log("The required validation " + required);
 
     if (required) {
-      pubsub.createNewBlock();
+      mlcoin.addModelTransactionToPendingModelTransactions(favouriteModelPool.validModelList())
       favouriteModelPool.clear()
+      pubsub.broadcastTransaction({clearModel:"yes"})
+      pubsub.createNewBlock();
+      // favouriteModelPool.clear()
     }
 
     res.json({ note: `Model will be added to the model pool.` });
@@ -237,7 +262,7 @@ function rpc(PORT, pubsub) {
 
   let PEER_PORT;
 
-  app.listen(PORT, () => {
+  app.listen(4000, () => {
     console.log(`listening at localhost:${PORT}`);
 
     if (PORT !== DEFAULT_PORT) {
@@ -246,4 +271,4 @@ function rpc(PORT, pubsub) {
   });
 }
 
-module.exports = { rpc, mlcoin, wallet, modelPool, favouriteModelPool };
+module.exports = { rpc, mlcoin, wallet, modelPool, favouriteModelPool,contractPool };

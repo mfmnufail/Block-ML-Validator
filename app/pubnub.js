@@ -8,7 +8,7 @@ var peers = process.argv.slice(3)
 var swarm = topology(address,peers);
 var streams = streamSet()
 
-const {rpc,mlcoin, wallet, modelPool,favouriteModelPool} = require('../blockchain/networkNode')
+const {rpc,mlcoin, wallet, modelPool,favouriteModelPool,contractPool} = require('../blockchain/networkNode')
 const DEFAULT_PORT = 3005;
 let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 10);
 var received = {}
@@ -112,7 +112,9 @@ swarm.on('connection', function (socket, id) {
         parsedMessage.datasetAddress && parsedMessage.description && mlcoin.addTrainDataTransactionToPendingDataTransactions(parsedMessage)
         parsedMessage.sender && mlcoin.addTransactionToPendingTransactions(parsedMessage);
         parsedMessage.datasetAddress && parsedMessage.modelAddress && !parsedMessage.performance && modelPool.setModelTransaction(parsedMessage);
+        parsedMessage.contractAddress && mlcoin.addContractToPendingContractTransactions(parsedMessage) && contractPool.setModelTransaction(parsedMessage)
         parsedMessage.reputation && mlcoin.addReputationRating({publickey:parsedMessage.publickey, reputation:parsedMessage.reputation})
+        parsedMessage.clearModel && favouriteModelPool.clear()
 
       if (data.seq <= received[data.from]) return // already received this one
       received[data.from] = data.seq
@@ -138,39 +140,39 @@ swarm.on('connection', function (socket, id) {
   }
 
  function validateNewBlock(){
-//  let nextValidator = mlcoin.nextValidator()
-let validator = mlcoin.getNextValidator()
- console.log("The previous validator " + validator)
+ let validator = mlcoin.nextBlockValidator()
+// let validator = mlcoin.getNextValidator()
+ console.log("Selected block validator " + validator)
  console.log("The chain length " + mlcoin.chain.length)
-  if(mlcoin.chain.length === 1){
-    if (validator === "bob"){
-      console.log('i am the validator')
-      newBlock = validatBlock()
-      mlcoin.clearGenesisStake()
-      peerBroadcastMessage(JSON.stringify(newBlock))
-      }else{
-        console.log('i am not a validator')
-      }
-  }else{
+  // if(mlcoin.chain.length === 1){
+  //   if (validator === "bob"){
+  //     console.log('i am the validator')
+  //     newBlock = validatBlock()
+  //     mlcoin.clearGenesisStake()
+  //     peerBroadcastMessage(JSON.stringify(newBlock))
+  //     }else{
+  //       console.log('i am not a validator')
+  //     }
+  // }else{
 
     if (validator === wallet.getPublickey()){
       console.log("Wallet Owner" + wallet.getPublickey() + " but validator " + validator)
         console.log('i am the validator')
-        newBlock = validatBlock()
+        newBlock = validatBlock({validator})
         peerBroadcastMessage(JSON.stringify(newBlock))
         }else{
           console.log("Wallet Owner" + wallet.getPublickey() + " but validator " + validator)
           console.log('i am not a validator')
         }
-  }
+  // }
  }
 
- function validatBlock(){
-  let nextValidator = mlcoin.nextBlockValidator()
-  console.log("The next validator " + nextValidator)
+ function validatBlock({validator}){
+  // let nextValidator = mlcoin.nextBlockValidator()
+  console.log("The block validator " + validator)
   const lastBlock = mlcoin.getLastBlock();
     const previousBlockHash = lastBlock["hash"];
-    const coinbase = mlcoin.createNewTransaction(6.25, "00", nextValidator)
+    const coinbase = mlcoin.createNewTransaction(6.25, "00", validator)
     mlcoin.addTransactionToPendingTransactions(coinbase)
     
     const currentBlockData = {
@@ -184,10 +186,11 @@ let validator = mlcoin.getNextValidator()
     const hash = BlockchainUtils.hashBlock(
       previousBlockHash,
       currentBlockData,
-      nextValidator
+      validator
     );
   
-    const newBlock = mlcoin.createNewBlock(hash, previousBlockHash,nextValidator);
+    const newBlock = mlcoin.createNewBlock(hash, previousBlockHash,validator);
+   
     peerBroadcastMessage(JSON.stringify(mlcoin))
  }
 
