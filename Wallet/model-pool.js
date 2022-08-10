@@ -10,7 +10,7 @@ class ModelPool {
   }
 
   setModelTransaction(transaction) {
-    this.modelMap[transaction.id] = transaction;
+    this.modelMap[transaction.modelAddress] = {...transaction};
   }
 
   setMap(modelMap) {

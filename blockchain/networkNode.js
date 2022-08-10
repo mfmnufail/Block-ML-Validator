@@ -90,7 +90,7 @@ function rpc(PORT, pubsub) {
 
 
     mlcoin.addContractToPendingContractTransactions(contractDetails)
-    contractPool.setModelTransaction(contractPool)
+    contractPool.setContractTransaction(contractDetails)
     pubsub.broadcastTransaction(contractDetails);
     res.send(contractDetails)
     // res.json({ note: `Transaction will be added in the block ${blockIndex}.` });
@@ -118,6 +118,8 @@ function rpc(PORT, pubsub) {
       note: `Training dataset will be added in the block ${blockIndex}.`,
     });
   });
+
+
 
   app.post("/data/test", (req, res) => {
     transaction = wallet.createTestDatasetTransaction({
@@ -195,9 +197,9 @@ function rpc(PORT, pubsub) {
 
     if (required) {
       mlcoin.addModelTransactionToPendingModelTransactions(favouriteModelPool.validModelList())
-      favouriteModelPool.clear()
       pubsub.broadcastTransaction({clearModel:"yes"})
       pubsub.createNewBlock();
+      favouriteModelPool.clear()
       // favouriteModelPool.clear()
     }
 
@@ -271,4 +273,4 @@ function rpc(PORT, pubsub) {
   });
 }
 
-module.exports = { rpc, mlcoin, wallet, modelPool, favouriteModelPool,contractPool };
+module.exports = { rpc, mlcoin, wallet,trainDatasetPool,testDatasetPool, modelPool, favouriteModelPool,contractPool };

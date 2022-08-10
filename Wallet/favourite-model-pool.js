@@ -86,7 +86,7 @@ class FavouriteModelPool {
   */
 
   validatingRequired() {
-    let arr = Object.keys(this.favouriteModelMap);
+    let arr = Object.values(this.favouriteModelMap);
     let merkle = [];
 
     arr.map((e) => {

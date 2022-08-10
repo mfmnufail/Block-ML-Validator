@@ -10,7 +10,7 @@ class TestDatasetPool  {
   }
 
   setTestDatasetTransaction(testDataset) {
-    this.testDatasetMap[testDataset.id] = testDataset;
+    this.testDatasetMap[testDataset.trainDatasetAddress] = {...testDataset};
   }
 
   setMap(testDatasetMap) {

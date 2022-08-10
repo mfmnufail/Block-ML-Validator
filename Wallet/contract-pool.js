@@ -1,34 +1,34 @@
-const Model = require('./model');
+// const Model = require('./model');
 
-class ModelPool {
+class ContractPool {
   constructor() {
-    this.modelMap = [];
+    this.contractMap = {};
   }
 
   clear() {
-    this.modelMap = [];
+    this.contractMap = {};
   }
 
-  setModelTransaction(transaction) {
-    this.modelMap.push(transaction);
+  setContractTransaction(transaction) {
+    this.contractMap[transaction.blockHash] = {...transaction};
   }
 
-  setMap(modelMap) {
-    this.modelMap = modelMap;
+  setMap(contractMap) {
+    this.contractMap = contractMap;
   }
 
   getMap(){
-    return this.modelMap;
+    return this.contractMap;
   }
 
-  existingTransaction({ blockHash }) {
-    const models = Object.values(this.modelMap);
+  existingContractTransaction({ blockHash }) {
+    const contracts = Object.values(this.contractMap);
 
-    return models.find(contract => contract.blockHash === blockHash);
+    return contracts.find(contract => contract.blockHash === blockHash);
   }
 
  
 
 }
 
-module.exports = ModelPool;
+module.exports = ContractPool;

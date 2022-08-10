@@ -8,7 +8,7 @@ var peers = process.argv.slice(3)
 var swarm = topology(address,peers);
 var streams = streamSet()
 
-const {rpc,mlcoin, wallet, modelPool,favouriteModelPool,contractPool} = require('../blockchain/networkNode')
+const {rpc,mlcoin, wallet, modelPool,trainDatasetPool,testDatasetPool,favouriteModelPool,contractPool} = require('../blockchain/networkNode')
 const DEFAULT_PORT = 3005;
 let PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 10);
 var received = {}
@@ -107,12 +107,12 @@ swarm.on('connection', function (socket, id) {
         const parsedMessage = JSON.parse(data.message)
 
         parsedMessage.chain && mlcoin.replaceChain(parsedMessage, mlcoin)
-        parsedMessage.testDatasetAddress && mlcoin.addTestDataTransactionToPendingDataTransactions(parsedMessage)
+        parsedMessage.testDatasetAddress && mlcoin.addTestDataTransactionToPendingDataTransactions(parsedMessage) && testDatasetPool.setTestDatasetTransaction(parsedMessage) 
         parsedMessage.merkleHash && favouriteModelPool.setFavouriteModelTransaction(parsedMessage)
-        parsedMessage.datasetAddress && parsedMessage.description && mlcoin.addTrainDataTransactionToPendingDataTransactions(parsedMessage)
+        parsedMessage.datasetAddress && parsedMessage.description && mlcoin.addTrainDataTransactionToPendingDataTransactions(parsedMessage) && trainDatasetPool.setTrainDatasetTransaction(parsedMessage);
         parsedMessage.sender && mlcoin.addTransactionToPendingTransactions(parsedMessage);
         parsedMessage.datasetAddress && parsedMessage.modelAddress && !parsedMessage.performance && modelPool.setModelTransaction(parsedMessage);
-        parsedMessage.contractAddress && mlcoin.addContractToPendingContractTransactions(parsedMessage) && contractPool.setModelTransaction(parsedMessage)
+        parsedMessage.contractAddress && mlcoin.addContractToPendingContractTransactions(parsedMessage) && contractPool.setContractTransaction(parsedMessage)
         parsedMessage.reputation && mlcoin.addReputationRating({publickey:parsedMessage.publickey, reputation:parsedMessage.reputation})
         parsedMessage.clearModel && favouriteModelPool.clear()
 

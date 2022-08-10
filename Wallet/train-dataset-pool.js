@@ -10,7 +10,7 @@ class TrainDatasetPool  {
   }
 
   setTrainDatasetTransaction(trainDataset) {
-    this.trainDatasetMap[trainDataset.id] = trainDataset;
+    this.trainDatasetMap[trainDataset.datasetAddress] = {...trainDataset};
   }
 
   setMap(trainDatasetMap) {
